@@ -63,7 +63,7 @@ export default function RegisterPage() {
 
       setSuccessMsg(data.message || 'Application submitted successfully!');
       setTimeout(() => {
-        router.push('/login');
+        window.location.href = '/login';
       }, 2500);
     } catch (err) {
       setError('Connection error. Please try again.');

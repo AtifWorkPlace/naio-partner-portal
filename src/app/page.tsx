@@ -45,24 +45,18 @@ export default function LandingPage() {
             </div>
           </div>
 
-          <div className="flex items-center gap-2 sm:gap-3">
+          <div className="flex items-center gap-3">
             <Link
               href="/login"
-              className="px-3 py-2 text-xs sm:text-sm font-semibold text-slate-300 hover:text-white transition-colors"
+              className="px-4 py-2 text-sm font-semibold text-slate-300 hover:text-white transition-colors"
             >
-              Distributor Portal
-            </Link>
-            <Link
-              href="/admin"
-              className="px-3 py-2 text-xs sm:text-sm font-semibold text-amber-400 hover:text-amber-300 border border-amber-500/30 bg-amber-950/20 rounded-lg transition-colors"
-            >
-              Admin Panel
+              Distributor Sign In
             </Link>
             <Link
               href="/register"
-              className="px-4 py-2 text-xs sm:text-sm font-semibold bg-emerald-500 hover:bg-emerald-400 text-slate-950 rounded-xl transition-all shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/30 flex items-center gap-1.5"
+              className="px-5 py-2.5 text-sm font-semibold bg-emerald-500 hover:bg-emerald-400 text-slate-950 rounded-xl transition-all shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/30 flex items-center gap-2"
             >
-              Apply as Partner <ArrowRight className="w-3.5 h-3.5" />
+              Apply as Partner <ArrowRight className="w-4 h-4" />
             </Link>
           </div>
         </div>
@@ -96,13 +90,7 @@ export default function LandingPage() {
               href="/login"
               className="w-full sm:w-auto px-8 py-4 bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-200 text-base font-semibold rounded-xl transition-all flex items-center justify-center gap-2"
             >
-              Distributor Portal
-            </Link>
-            <Link
-              href="/admin"
-              className="w-full sm:w-auto px-8 py-4 bg-slate-900 hover:bg-slate-800 border border-amber-500/30 text-amber-300 text-base font-semibold rounded-xl transition-all flex items-center justify-center gap-2"
-            >
-              Executive Admin Panel
+              Partner Portal Sign In
             </Link>
           </div>
 
@@ -254,7 +242,7 @@ export default function LandingPage() {
           <div className="flex items-center gap-4 text-slate-400">
             <span>Assam, India</span>
             <span>•</span>
-            <Link href="/login" className="hover:text-emerald-400">Admin Sign In</Link>
+            <Link href="/login" title="Admin Access" className="opacity-20 hover:opacity-100 text-slate-500 transition-opacity text-xs">🔒</Link>
           </div>
         </div>
       </footer>

@@ -35,9 +35,9 @@ export default function LoginPage() {
       // Redirect based on role
       const userRole = data.user?.role?.toUpperCase();
       if (userRole === 'ADMIN') {
-        router.push('/admin');
+        window.location.href = '/admin';
       } else {
-        router.push('/affiliate');
+        window.location.href = '/affiliate';
       }
     } catch (err) {
       setError('Connection error. Please try again.');
