@@ -80,10 +80,14 @@ export async function POST(request: NextRequest) {
     });
 
     return response;
-  } catch (error) {
+  } catch (error: any) {
     console.error('Login API error:', error);
     return NextResponse.json(
-      { success: false, message: 'Login processing error' },
+      { 
+        success: false, 
+        message: 'Login processing error',
+        error: error?.message || String(error)
+      },
       { status: 500 }
     );
   }
