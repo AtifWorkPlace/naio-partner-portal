@@ -2,9 +2,9 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { jwtVerify } from 'jose';
 
-const JWT_SECRET = new TextEncoder().encode(
-  process.env.JWT_SECRET || 'naio-partner-secret-jwt-key-2026-development-mode'
-);
+import { getJwtSecret } from '@/lib/jwt';
+
+const JWT_SECRET = getJwtSecret();
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;

@@ -4,9 +4,9 @@ import { IncentiveEngine } from '@/lib/incentives';
 import { jwtVerify } from 'jose';
 import crypto from 'crypto';
 
-const JWT_SECRET = new TextEncoder().encode(
-  process.env.JWT_SECRET || 'naio-partner-secret-jwt-key-2026-development-mode'
-);
+import { getJwtSecret } from '@/lib/jwt';
+
+const JWT_SECRET = getJwtSecret();
 
 export async function POST(request: NextRequest) {
   try {

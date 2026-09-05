@@ -3,9 +3,9 @@ import { prisma } from '@/lib/prisma';
 import { PayoutStatus, EarningStatus } from '@prisma/client';
 import { jwtVerify } from 'jose';
 
-const JWT_SECRET = new TextEncoder().encode(
-  process.env.JWT_SECRET || 'naio-partner-secret-jwt-key-2026-development-mode'
-);
+import { getJwtSecret } from '@/lib/jwt';
+
+const JWT_SECRET = getJwtSecret();
 
 export async function GET(request: NextRequest) {
   try {
