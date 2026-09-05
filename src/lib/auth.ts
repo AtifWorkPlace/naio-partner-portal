@@ -85,17 +85,25 @@ class AuthService {
       const initialRole = isDevAdmin ? Role.ADMIN : Role.DISTRIBUTOR;
       const initialStatus = isDevAdmin ? UserStatus.ACTIVE : UserStatus.PENDING;
 
-      // Look up district code if districtId provided
-      let districtCode = 'DIS';
-      let districtName = data.districtName;
-      if (data.districtId) {
-        const district = await prisma.district.findUnique({
-          where: { id: data.districtId },
-        });
-        if (district) {
-          districtCode = district.code;
-          districtName = district.name;
+      // Look up district code by ID or Name
+      let districtCode = 'KAM';
+      let districtId = data.districtId;
+      let districtName = data.districtName || 'Kamrup Metro';
+
+      const searchKeyword = (data.districtName || '').split(' ')[0];
+      const district = await prisma.district.findFirst({
+        where: {
+          OR: [
+            ...(data.districtId ? [{ id: data.districtId }] : []),
+            ...(searchKeyword ? [{ name: { contains: searchKeyword } }] : []),
+          ]
         }
+      });
+
+      if (district) {
+        districtCode = district.code;
+        districtId = district.id;
+        districtName = district.name;
       }
 
       const distributorCode = await this.generateDistributorCode(districtCode);
@@ -120,7 +128,7 @@ class AuthService {
               distributorCode,
               businessName: data.businessName || `${data.name} Enterprise`,
               phone: data.phone || null,
-              districtId: data.districtId || null,
+              districtId: districtId || null,
               districtName: districtName || 'Unassigned',
               address: data.address || null,
               gstin: data.gstin || null,

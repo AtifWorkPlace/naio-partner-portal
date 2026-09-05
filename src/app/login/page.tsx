@@ -70,6 +70,35 @@ export default function LoginPage() {
             </div>
           )}
 
+          {/* 1-Click Quick Demo Login Shortcuts */}
+          <div className="p-3.5 rounded-2xl bg-slate-950/80 border border-slate-800 space-y-2">
+            <span className="block text-[11px] font-bold uppercase tracking-wider text-slate-400 text-center">
+              Quick 1-Click Login Shortcuts
+            </span>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setEmail('admin@naiofoods.com');
+                  setPassword('NaioAdmin2026!');
+                }}
+                className="px-2.5 py-1.5 bg-amber-950/40 hover:bg-amber-950/70 border border-amber-500/30 text-amber-300 rounded-lg text-xs font-semibold transition-all text-center"
+              >
+                👑 Executive Admin
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setEmail('kamrup.distributor@naiofoods.com');
+                  setPassword('Distributor2026!');
+                }}
+                className="px-2.5 py-1.5 bg-emerald-950/40 hover:bg-emerald-950/70 border border-emerald-500/30 text-emerald-300 rounded-lg text-xs font-semibold transition-all text-center"
+              >
+                🚛 Kamrup Partner
+              </button>
+            </div>
+          </div>
+
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
               <label className="block text-xs font-semibold uppercase text-slate-400 mb-2">Email Address</label>
