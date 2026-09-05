@@ -48,7 +48,7 @@ export async function PUT(
     }
 
     // Get estimated value from referral metadata
-    const metadata = referral.metadata as Record<string, any> || {};
+    const metadata = (referral.metadata ? (typeof referral.metadata === 'string' ? JSON.parse(referral.metadata) : referral.metadata) : {}) as Record<string, any>;
     const estimatedValueCents = Number(metadata?.estimated_value) * 100 || 10000;
 
     const updatedReferral = await prisma.referral.update({
@@ -157,7 +157,7 @@ export async function PATCH(
 
       // If approved, create conversion and commission
       if (action === 'approve') {
-        const refMetadata = referral.metadata as Record<string, any> || {};
+        const refMetadata = (referral.metadata ? (typeof referral.metadata === 'string' ? JSON.parse(referral.metadata) : referral.metadata) : {}) as Record<string, any>;
         const estValueCents = Number(refMetadata?.estimated_value) * 100 || 10000;
         const commissionRate = referral.affiliate.partnerGroup?.commissionRate
           ? referral.affiliate.partnerGroup.commissionRate / 100

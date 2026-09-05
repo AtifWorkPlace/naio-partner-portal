@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { UserStatus } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 
-
 // Update affiliate status
 export async function PATCH(
   request: NextRequest,
@@ -11,9 +10,9 @@ export async function PATCH(
   try {
     const params = await context.params;
     const userId = request.headers.get('x-user-id')!;
-    
+
     const user = await prisma.user.findUnique({
-      where: { id: userId }
+      where: { id: userId },
     });
 
     if (!user || user.role !== 'ADMIN') {
@@ -33,7 +32,6 @@ export async function PATCH(
       );
     }
 
-    // Validate status
     const validStatuses = ['PENDING', 'ACTIVE', 'INACTIVE', 'SUSPENDED'];
     if (!validStatuses.includes(status)) {
       return NextResponse.json(
@@ -42,10 +40,9 @@ export async function PATCH(
       );
     }
 
-    // Get affiliate to find userId
     const affiliate = await prisma.affiliate.findUnique({
       where: { id: params.id },
-      include: { user: true }
+      include: { user: true },
     });
 
     if (!affiliate) {
@@ -55,28 +52,27 @@ export async function PATCH(
       );
     }
 
-    // Update user status
     const updatedUser = await prisma.user.update({
       where: { id: affiliate.userId },
       data: {
-        status: status as UserStatus
-      }
+        status: status as UserStatus,
+      },
     });
 
-    // Create audit log
+    // Create audit log with stringified JSON payload
     await prisma.auditLog.create({
       data: {
         actorId: user.id,
         action: 'UPDATE_AFFILIATE_STATUS',
         objectType: 'AFFILIATE',
         objectId: params.id,
-        payload: {
+        payload: JSON.stringify({
           oldStatus: affiliate.user.status,
-          newStatus: status,
-          notes: notes || null,
-          affiliateEmail: affiliate.user.email
-        }
-      }
+          newStatus: status as UserStatus,
+          notes: (notes || null) as string | null,
+          affiliateEmail: affiliate.user.email,
+        }),
+      },
     });
 
     return NextResponse.json({
@@ -85,10 +81,9 @@ export async function PATCH(
       affiliate: {
         id: affiliate.id,
         userId: updatedUser.id,
-        status: updatedUser.status
-      }
+        status: updatedUser.status,
+      },
     });
-
   } catch (error) {
     console.error('Update affiliate status error:', error);
     return NextResponse.json(
@@ -106,9 +101,9 @@ export async function DELETE(
   try {
     const params = await context.params;
     const userId = request.headers.get('x-user-id')!;
-    
+
     const user = await prisma.user.findUnique({
-      where: { id: userId }
+      where: { id: userId },
     });
 
     if (!user || user.role !== 'ADMIN') {
@@ -118,10 +113,9 @@ export async function DELETE(
       );
     }
 
-    // Get affiliate to find userId
     const affiliate = await prisma.affiliate.findUnique({
       where: { id: params.id },
-      include: { user: true }
+      include: { user: true },
     });
 
     if (!affiliate) {
@@ -131,31 +125,28 @@ export async function DELETE(
       );
     }
 
-    // Delete user (will cascade delete affiliate due to Prisma schema)
     await prisma.user.delete({
-      where: { id: affiliate.userId }
+      where: { id: affiliate.userId },
     });
 
-    // Create audit log
     await prisma.auditLog.create({
       data: {
         actorId: user.id,
         action: 'DELETE_AFFILIATE',
         objectType: 'AFFILIATE',
         objectId: params.id,
-        payload: {
+        payload: JSON.stringify({
           affiliateName: affiliate.user.name,
           affiliateEmail: affiliate.user.email,
-          referralCode: affiliate.referralCode
-        }
-      }
+          referralCode: affiliate.referralCode,
+        }),
+      },
     });
 
     return NextResponse.json({
       success: true,
-      message: 'Affiliate deleted successfully'
+      message: 'Affiliate deleted successfully',
     });
-
   } catch (error) {
     console.error('Delete affiliate error:', error);
     return NextResponse.json(

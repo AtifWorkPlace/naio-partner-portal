@@ -106,10 +106,10 @@ export async function POST(request: NextRequest) {
             actorId: admin.id,
             objectType: 'payout',
             objectId: payout.id,
-            payload: {
+            payload: JSON.stringify({
               affiliateId: affiliate.id,
               amountCents: payoutAmountCents,
-            },
+            }),
           },
         });
 

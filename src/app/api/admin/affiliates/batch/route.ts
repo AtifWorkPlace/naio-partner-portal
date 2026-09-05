@@ -2,14 +2,13 @@ import { NextRequest, NextResponse } from 'next/server';
 import { UserStatus } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 
-
 // Batch update affiliates
 export async function POST(request: NextRequest) {
   try {
     const userId = request.headers.get('x-user-id')!;
-    
+
     const user = await prisma.user.findUnique({
-      where: { id: userId }
+      where: { id: userId },
     });
 
     if (!user || user.role !== 'ADMIN') {
@@ -47,7 +46,6 @@ export async function POST(request: NextRequest) {
           );
         }
 
-        // Validate status
         const validStatuses = ['PENDING', 'ACTIVE', 'INACTIVE', 'SUSPENDED'];
         if (!validStatuses.includes(status)) {
           return NextResponse.json(
@@ -56,40 +54,37 @@ export async function POST(request: NextRequest) {
           );
         }
 
-        // Get all affiliates to find their userIds
         const affiliates = await prisma.affiliate.findMany({
-          where: { id: { in: affiliateIds } }
+          where: { id: { in: affiliateIds } },
         });
 
-        const userIds = affiliates.map(aff => aff.userId);
+        const userIds = affiliates.map((aff) => aff.userId);
 
-        // Update user statuses
         const result = await prisma.user.updateMany({
           where: { id: { in: userIds } },
-          data: { status: status as UserStatus }
+          data: { status: status as UserStatus },
         });
 
         updatedCount = result.count;
 
-        // Create audit log
         await prisma.auditLog.create({
           data: {
             actorId: user.id,
             action: 'BATCH_UPDATE_AFFILIATE_STATUS',
             objectType: 'AFFILIATE',
             objectId: 'BATCH',
-            payload: {
+            payload: JSON.stringify({
               affiliateIds,
               newStatus: status,
-              count: updatedCount
-            }
-          }
+              count: updatedCount,
+            }),
+          },
         });
 
         return NextResponse.json({
           success: true,
           message: `Updated ${updatedCount} affiliate(s) status to ${status}`,
-          count: updatedCount
+          count: updatedCount,
         });
 
       case 'changeGroup':
@@ -100,20 +95,14 @@ export async function POST(request: NextRequest) {
           );
         }
 
-        // Update affiliate metadata with group
         for (const affiliateId of affiliateIds) {
           await prisma.affiliate.update({
             where: { id: affiliateId },
             data: {
-              payoutDetails: {
-                // Preserve existing data and add/update group
-                ...(await prisma.affiliate.findUnique({
-                  where: { id: affiliateId },
-                  select: { payoutDetails: true }
-                }).then(a => a?.payoutDetails as any) || {}),
-                group
-              }
-            }
+              payoutDetails: JSON.stringify({
+                group,
+              }),
+            },
           });
           updatedCount++;
         }
@@ -124,32 +113,30 @@ export async function POST(request: NextRequest) {
             action: 'BATCH_UPDATE_AFFILIATE_GROUP',
             objectType: 'AFFILIATE',
             objectId: 'BATCH',
-            payload: {
+            payload: JSON.stringify({
               affiliateIds,
               newGroup: group,
-              count: updatedCount
-            }
-          }
+              count: updatedCount,
+            }),
+          },
         });
 
         return NextResponse.json({
           success: true,
           message: `Updated ${updatedCount} affiliate(s) group to ${group}`,
-          count: updatedCount
+          count: updatedCount,
         });
 
       case 'delete':
-        // Get all affiliates to find their userIds
         const affiliatesToDelete = await prisma.affiliate.findMany({
           where: { id: { in: affiliateIds } },
-          include: { user: true }
+          include: { user: true },
         });
 
-        const userIdsToDelete = affiliatesToDelete.map(aff => aff.userId);
+        const userIdsToDelete = affiliatesToDelete.map((aff) => aff.userId);
 
-        // Delete users (will cascade delete affiliates)
         const deleteResult = await prisma.user.deleteMany({
-          where: { id: { in: userIdsToDelete } }
+          where: { id: { in: userIdsToDelete } },
         });
 
         updatedCount = deleteResult.count;
@@ -160,18 +147,18 @@ export async function POST(request: NextRequest) {
             action: 'BATCH_DELETE_AFFILIATES',
             objectType: 'AFFILIATE',
             objectId: 'BATCH',
-            payload: {
+            payload: JSON.stringify({
               affiliateIds,
               count: updatedCount,
-              deletedEmails: affiliatesToDelete.map(a => a.user.email)
-            }
-          }
+              deletedEmails: affiliatesToDelete.map((a) => a.user.email),
+            }),
+          },
         });
 
         return NextResponse.json({
           success: true,
           message: `Deleted ${updatedCount} affiliate(s)`,
-          count: updatedCount
+          count: updatedCount,
         });
 
       default:
@@ -180,7 +167,6 @@ export async function POST(request: NextRequest) {
           { status: 400 }
         );
     }
-
   } catch (error) {
     console.error('Batch update affiliates error:', error);
     return NextResponse.json(

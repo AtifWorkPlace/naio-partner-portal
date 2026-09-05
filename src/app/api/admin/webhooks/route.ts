@@ -288,7 +288,7 @@ export async function POST(request: NextRequest) {
             data: {
               webhookId,
               eventType: 'test',
-              payload: testPayload,
+              payload: JSON.stringify(testPayload),
               status: response.ok ? 'SUCCESS' : 'FAILED',
               statusCode: response.status,
               response: responseText.substring(0, 1000),
@@ -311,7 +311,7 @@ export async function POST(request: NextRequest) {
             data: {
               webhookId,
               eventType: 'test',
-              payload: testPayload,
+              payload: JSON.stringify(testPayload),
               status: 'FAILED',
               error: error.message,
               completedAt: new Date()

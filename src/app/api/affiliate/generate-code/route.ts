@@ -47,7 +47,7 @@ export async function POST(request: NextRequest) {
         data: {
           userId: user.id,
           referralCode,
-          payoutDetails: {},
+          payoutDetails: JSON.stringify({}),
           balanceCents: 0
         }
       });

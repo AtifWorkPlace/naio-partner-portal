@@ -59,7 +59,7 @@ export async function POST(request: NextRequest) {
           apiKey,
           provider: 'refferq',
           isActive: true,
-          config: {},
+          config: JSON.stringify({}),
         }
       });
     }

@@ -17,7 +17,7 @@ export async function logAuditAction(data: {
                 action: data.action,
                 objectType: data.objectType,
                 objectId: data.objectId,
-                payload: data.payload || {},
+                payload: typeof data.payload === 'string' ? data.payload : JSON.stringify(data.payload || {}),
             },
         });
     } catch (error) {

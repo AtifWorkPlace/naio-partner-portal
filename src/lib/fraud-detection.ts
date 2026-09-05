@@ -97,14 +97,14 @@ export async function logFraudEvent(clickId: string, fraudResult: FraudCheckResu
     await prisma.referralClick.update({
         where: { id: clickId },
         data: {
-            metadata: {
+            metadata: JSON.stringify({
                 fraud_check: {
                     is_suspicious: fraudResult.isSuspicious,
                     risk_score: fraudResult.riskScore,
                     reasons: fraudResult.reasons,
                     checked_at: new Date().toISOString(),
                 },
-            },
+            }),
         },
     });
 }

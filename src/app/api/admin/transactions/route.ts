@@ -199,11 +199,11 @@ export async function POST(request: NextRequest) {
         amountCents,
         status: 'APPROVED',
         currency: 'INR',
-        eventMetadata: {
+        eventMetadata: JSON.stringify({
           transactionId: transaction.id,
           commissionCents,
           commissionRate
-        }
+        })
       }
     });
 

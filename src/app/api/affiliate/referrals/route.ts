@@ -57,12 +57,12 @@ export async function POST(request: NextRequest) {
         leadName: leadName.trim(),
         leadEmail: leadEmail.toLowerCase().trim(),
         status: 'PENDING',
-        metadata: {
+        metadata: JSON.stringify({
           company: company || '',
           notes: notes || '',
           source: 'manual',
           estimated_value: estimatedValue || 0,
-        },
+        }),
       }
     });
 

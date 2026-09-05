@@ -80,10 +80,7 @@ export async function POST(request: NextRequest) {
         // Strategy: find conversions by customer email in event_metadata
         const conversions = await prisma.conversion.findMany({
             where: {
-                eventMetadata: {
-                    path: ['customerEmail'],
-                    equals: customer_email,
-                },
+                status: { in: ['PENDING', 'APPROVED'] },
             },
             include: {
                 commissions: true,

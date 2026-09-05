@@ -103,13 +103,13 @@ export async function POST(request: NextRequest) {
         action: 'TRANSACTION_REFUNDED',
         objectType: 'transaction',
         objectId: transactionId,
-        payload: {
+        payload: JSON.stringify({
           reason: reason || 'No reason provided',
           transactionAmountCents: transaction.amountCents,
           commissionReversed: results.commissionReversed,
           reversedAmountCents: results.reversedAmountCents,
           balanceDeducted: results.balanceDeducted,
-        },
+        }),
       },
     });
 

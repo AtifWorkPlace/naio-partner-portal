@@ -100,12 +100,12 @@ export async function GET(
           leadName: 'Click Visitor',
           leadEmail: `click-${attributionKey}@tracking.internal`,
           status: 'PENDING',
-          metadata: {
+          metadata: JSON.stringify({
             source: 'referral_link',
             attribution_key: attributionKey,
             target_url: targetUrl,
             params: Object.fromEntries(searchParams.entries()),
-          }
+          })
         }
       });
     }
@@ -117,7 +117,7 @@ export async function GET(
         ipAddress: cleanIP,
         userAgent: userAgent,
         referer: referer,
-        metadata: {
+        metadata: JSON.stringify({
           attribution_key: attributionKey,
           target_url: targetUrl,
           is_deep_link: !!searchParams.get('dest'),
@@ -126,7 +126,7 @@ export async function GET(
             risk_score: fraudResult.riskScore,
             reasons: fraudResult.reasons,
           },
-        }
+        })
       }
     });
 

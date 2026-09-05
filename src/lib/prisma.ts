@@ -359,7 +359,7 @@ export class DatabaseService {
         action: logData.action,
         objectType: logData.objectType,
         objectId: logData.objectId,
-        payload: logData.payload || {},
+        payload: typeof logData.payload === 'string' ? logData.payload : JSON.stringify(logData.payload || {}),
       },
     });
   }

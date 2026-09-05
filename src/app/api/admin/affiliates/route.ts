@@ -129,7 +129,7 @@ export async function POST(request: NextRequest) {
         userId: newUser.id,
         referralCode: `AF${Date.now()}${(await import('crypto')).randomBytes(3).toString('hex').toUpperCase().slice(0, 4)}`,
         balanceCents: 0,
-        payoutDetails: {}
+        payoutDetails: JSON.stringify({})
       }
     });
 

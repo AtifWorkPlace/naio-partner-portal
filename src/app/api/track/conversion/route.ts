@@ -98,19 +98,20 @@ export async function POST(req: NextRequest) {
           leadName: customerName || 'Unknown Customer',
           affiliateId: affiliate.id,
           status: 'APPROVED',
-          metadata: metadata || {},
+          metadata: JSON.stringify(metadata || {}),
         },
       });
     } else if (referral && referral.status === 'PENDING') {
       // Update referral status to APPROVED
+      const existingMeta = typeof referral.metadata === 'string' ? JSON.parse(referral.metadata || '{}') : (referral.metadata || {});
       referral = await prisma.referral.update({
         where: { id: referral.id },
         data: {
           status: 'APPROVED',
-          metadata: {
-            ...(referral.metadata as object),
+          metadata: JSON.stringify({
+            ...existingMeta,
             ...metadata,
-          },
+          }),
         },
       });
     }
@@ -126,12 +127,12 @@ export async function POST(req: NextRequest) {
         amountCents,
         currency: currency || 'USD',
         status: 'PENDING',
-        eventMetadata: {
+        eventMetadata: JSON.stringify({
           orderId: orderId || null,
           url: url || null,
           timestamp: timestamp || new Date().toISOString(),
           ...metadata,
-        },
+        }),
       },
     });
 

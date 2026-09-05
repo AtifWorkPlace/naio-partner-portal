@@ -192,7 +192,8 @@ export async function withRateLimit(
     apiKeyId = apiKey.id;
 
     // Check scopes
-    const scopes = apiKey.scopes as string[];
+    const rawScopes = apiKey.scopes;
+    const scopes: string[] = typeof rawScopes === 'string' ? JSON.parse(rawScopes || '[]') : ((rawScopes as unknown as string[]) || []);
     if (method !== 'GET' && !scopes.includes('write') && !scopes.includes('admin')) {
       return NextResponse.json(
         { error: 'Insufficient API key permissions' },
