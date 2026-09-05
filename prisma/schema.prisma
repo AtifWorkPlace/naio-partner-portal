@@ -553,6 +553,7 @@ enum UserStatus {
   INACTIVE
   SUSPENDED
   PENDING
+  REJECTED
 }
 
 enum SaleStatus {
