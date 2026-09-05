@@ -3,280 +3,131 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
-import {
-  InputOTP,
-  InputOTPGroup,
-  InputOTPSlot,
-  InputOTPSeparator,
-} from '@/components/ui/input-otp';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Target, Mail, ShieldCheck, ArrowLeft, Loader2 } from 'lucide-react';
-
-type Step = 'email' | 'otp';
+import { Package, Lock, Mail, ArrowRight, AlertCircle } from 'lucide-react';
 
 export default function LoginPage() {
   const router = useRouter();
-  const [step, setStep] = useState<Step>('email');
   const [email, setEmail] = useState('');
-  const [otp, setOtp] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  const [message, setMessage] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const handleSendOTP = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setLoading(true);
 
     try {
-      const otpRes = await fetch('/api/auth/send-otp', {
+      const res = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email }),
-      });
-
-      const otpData = await otpRes.json();
-
-      if (otpRes.ok && otpData.success) {
-        setStep('otp');
-        setMessage(otpData.message || 'A verification code has been sent to your email.');
-      } else {
-        setError(otpData.message || 'Failed to send verification code');
-      }
-    } catch (_e) {
-      setError('Something went wrong. Please try again.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleVerifyOTP = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (otp.length < 6) {
-      setError('Please enter the full 6-digit code');
-      return;
-    }
-    setError('');
-    setLoading(true);
-
-    try {
-      const res = await fetch('/api/auth/verify-otp', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ email, code: otp }),
+        body: JSON.stringify({ email, password }),
       });
 
       const data = await res.json();
 
-      if (res.ok && data.success) {
-        const user = data.user;
-        if (user.role === 'ADMIN') {
-          router.push('/admin');
-        } else {
-          router.push('/affiliate');
-        }
-      } else {
-        setError(data.error || 'Invalid verification code');
+      if (!res.ok || !data.success) {
+        setError(data.message || 'Login failed. Please check your credentials.');
+        setLoading(false);
+        return;
       }
-    } catch (_e) {
-      setError('Verification failed. Please try again.');
-    } finally {
-      setLoading(false);
-    }
-  };
 
-  const handleResendOTP = async () => {
-    setError('');
-    setMessage('');
-    setLoading(true);
-
-    try {
-      const res = await fetch('/api/auth/send-otp', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email }),
-      });
-
-      if (res.ok) {
-        setMessage('A new verification code has been sent.');
+      // Redirect based on role
+      const userRole = data.user?.role?.toUpperCase();
+      if (userRole === 'ADMIN') {
+        router.push('/admin');
       } else {
-        setError('Failed to resend code. Please try again.');
+        router.push('/affiliate');
       }
-    } catch (_e) {
-      setError('Failed to resend code.');
-    } finally {
+    } catch (err) {
+      setError('Connection error. Please try again.');
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-muted/30 to-background p-4">
-      <div className="w-full max-w-md space-y-6">
-        {/* Logo & Branding */}
-        <div className="text-center space-y-2">
-          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-primary shadow-lg shadow-primary/25">
-            <Target className="h-7 w-7 text-primary-foreground" />
+    <div className="min-h-screen bg-slate-950 text-slate-100 font-sans flex flex-col justify-center py-12 sm:px-6 lg:px-8 relative">
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 w-[500px] h-[300px] bg-emerald-500/10 blur-[130px] rounded-full" />
+      </div>
+
+      <div className="sm:mx-auto sm:w-full sm:max-w-md text-center z-10 space-y-3">
+        <Link href="/" className="inline-flex items-center gap-3">
+          <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-emerald-600 to-teal-400 flex items-center justify-center shadow-lg shadow-emerald-900/40">
+            <Package className="w-7 h-7 text-slate-950 stroke-[2.5]" />
           </div>
-          <h1 className="text-2xl font-bold tracking-tight">Refferq</h1>
-          <p className="text-sm text-muted-foreground">
-            Affiliate Marketing Platform
-          </p>
-        </div>
+        </Link>
+        <h2 className="text-3xl font-black text-white tracking-tight">NAIO PARTNER</h2>
+        <p className="text-xs uppercase tracking-widest font-bold text-emerald-400">Distributor & Admin Login</p>
+      </div>
 
-        {/* Login Card */}
-        <Card className="border-0 shadow-xl shadow-black/5">
-          {step === 'email' ? (
-            <>
-              <CardHeader className="text-center pb-4">
-                <CardTitle className="text-xl">Welcome back</CardTitle>
-                <CardDescription>
-                  Enter your email to sign in to your account
-                </CardDescription>
-              </CardHeader>
-              <form onSubmit={handleSendOTP}>
-                <CardContent className="space-y-4">
-                  {error && (
-                    <Alert variant="destructive">
-                      <AlertDescription>{error}</AlertDescription>
-                    </Alert>
-                  )}
-                  <div className="space-y-2">
-                    <Label htmlFor="email">Email address</Label>
-                    <div className="relative">
-                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                      <Input
-                        id="email"
-                        type="email"
-                        placeholder="you@example.com"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        className="pl-10"
-                        required
-                        autoFocus
-                        autoComplete="email"
-                      />
-                    </div>
-                  </div>
-                </CardContent>
-                <CardFooter className="flex-col gap-4">
-                  <Button type="submit" className="w-full" size="lg" disabled={loading || !email}>
-                    {loading ? (
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    ) : (
-                      <Mail className="mr-2 h-4 w-4" />
-                    )}
-                    {loading ? 'Sending code...' : 'Continue with Email'}
-                  </Button>
-                </CardFooter>
-              </form>
-            </>
-          ) : (
-            <>
-              <CardHeader className="text-center pb-4">
-                <div className="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
-                  <ShieldCheck className="h-6 w-6 text-primary" />
-                </div>
-                <CardTitle className="text-xl">Check your email</CardTitle>
-                <CardDescription>
-                  We sent a 6-digit code to <span className="font-medium text-foreground">{email}</span>
-                </CardDescription>
-              </CardHeader>
-              <form onSubmit={handleVerifyOTP}>
-                <CardContent className="space-y-4">
-                  {error && (
-                    <Alert variant="destructive">
-                      <AlertDescription>{error}</AlertDescription>
-                    </Alert>
-                  )}
-                  {message && (
-                    <Alert>
-                      <AlertDescription>{message}</AlertDescription>
-                    </Alert>
-                  )}
-                  <div className="flex justify-center">
-                    <InputOTP
-                      maxLength={6}
-                      value={otp}
-                      onChange={(value) => setOtp(value)}
-                    >
-                      <InputOTPGroup>
-                        <InputOTPSlot index={0} />
-                        <InputOTPSlot index={1} />
-                        <InputOTPSlot index={2} />
-                      </InputOTPGroup>
-                      <InputOTPSeparator />
-                      <InputOTPGroup>
-                        <InputOTPSlot index={3} />
-                        <InputOTPSlot index={4} />
-                        <InputOTPSlot index={5} />
-                      </InputOTPGroup>
-                    </InputOTP>
-                  </div>
-                </CardContent>
-                <CardFooter className="flex-col gap-3">
-                  <Button
-                    type="submit"
-                    className="w-full"
-                    size="lg"
-                    disabled={loading || otp.length < 6}
-                  >
-                    {loading ? (
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    ) : (
-                      <ShieldCheck className="mr-2 h-4 w-4" />
-                    )}
-                    {loading ? 'Verifying...' : 'Verify & Sign in'}
-                  </Button>
-                  <div className="flex items-center justify-between w-full">
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => {
-                        setStep('email');
-                        setOtp('');
-                        setError('');
-                        setMessage('');
-                      }}
-                    >
-                      <ArrowLeft className="mr-1 h-3 w-3" />
-                      Change email
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={handleResendOTP}
-                      disabled={loading}
-                    >
-                      Resend code
-                    </Button>
-                  </div>
-                </CardFooter>
-              </form>
-            </>
+      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md z-10 px-4 sm:px-0">
+        <div className="bg-slate-900/90 border border-slate-800 py-8 px-6 shadow-2xl rounded-3xl sm:px-10 space-y-6">
+          {error && (
+            <div className="p-4 rounded-xl bg-red-950/60 border border-red-500/40 text-red-300 text-xs flex items-center gap-3">
+              <AlertCircle className="w-5 h-5 text-red-400 shrink-0" />
+              <span>{error}</span>
+            </div>
           )}
-        </Card>
 
-        {/* Footer */}
-        <p className="text-center text-sm text-muted-foreground">
-          Don&apos;t have an account?{' '}
-          <Link href="/register" className="font-medium text-primary hover:underline">
-            Sign up
-          </Link>
-        </p>
+          <form onSubmit={handleSubmit} className="space-y-5">
+            <div>
+              <label className="block text-xs font-semibold uppercase text-slate-400 mb-2">Email Address</label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-500">
+                  <Mail className="w-4 h-4" />
+                </div>
+                <input
+                  type="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="distributor@naiofoods.com"
+                  className="w-full pl-10 pr-4 py-3 bg-slate-950 border border-slate-800 rounded-xl text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold uppercase text-slate-400 mb-2">Password</label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-500">
+                  <Lock className="w-4 h-4" />
+                </div>
+                <input
+                  type="password"
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••••••"
+                  className="w-full pl-10 pr-4 py-3 bg-slate-950 border border-slate-800 rounded-xl text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all"
+                />
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full py-3.5 bg-emerald-500 hover:bg-emerald-400 disabled:opacity-50 text-slate-950 font-bold text-sm rounded-xl transition-all shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-2 mt-2"
+            >
+              {loading ? (
+                <span>Signing in...</span>
+              ) : (
+                <>
+                  <span>Sign In to Dashboard</span>
+                  <ArrowRight className="w-4 h-4" />
+                </>
+              )}
+            </button>
+          </form>
+
+          <div className="pt-4 border-t border-slate-800 text-center text-xs text-slate-400">
+            <span>Don't have a distributor account? </span>
+            <Link href="/register" className="text-emerald-400 font-semibold hover:underline">
+              Apply to become a Partner
+            </Link>
+          </div>
+        </div>
       </div>
     </div>
   );

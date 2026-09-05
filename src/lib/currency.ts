@@ -1,35 +1,38 @@
-import { prisma } from './prisma';
-
-const CURRENCY_SYMBOLS: Record<string, string> = {
-    'USD': '$',
-    'EUR': '€',
-    'INR': '₹',
-    'GBP': '£',
-    'BGN': 'лв.',
-    'CAD': 'CA$',
-    'AUD': 'A$',
-};
+/**
+ * Currency and Number Formatting Utility for NAIO PARTNER
+ * Enforces Indian Rupee (₹) and Indian Numbering System (en-IN).
+ */
 
 export async function getCurrencySymbol(): Promise<string> {
-    try {
-        const settings = await prisma.programSettings.findFirst();
-        const currency = settings?.currency || 'USD';
-        return CURRENCY_SYMBOLS[currency] || currency;
-    } catch (error) {
-        console.error('Failed to fetch currency symbol:', error);
-        return '$';
-    }
+  return '₹';
 }
 
-export function formatCurrency(cents: number, symbol: string): string {
-    const amount = cents / 100;
-    return `${symbol}${amount.toLocaleString(undefined, {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-    })}`;
+export function formatRupees(amount: number, includeDecimals = false): string {
+  const rounded = Math.round((amount || 0) * 100) / 100;
+  const formattedNumber = rounded.toLocaleString('en-IN', {
+    minimumFractionDigits: includeDecimals ? 2 : 0,
+    maximumFractionDigits: 2,
+  });
+
+  return `₹${formattedNumber}`;
+}
+
+export function formatIndianNumber(num: number): string {
+  return (num || 0).toLocaleString('en-IN');
+}
+
+export function formatCurrencyCents(cents: number): string {
+  return formatRupees(cents / 100, true);
+}
+
+export function formatCurrency(cents: number, symbol = '₹'): string {
+  const amount = cents / 100;
+  return `${symbol}${amount.toLocaleString('en-IN', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })}`;
 }
 
 export async function formatAmount(cents: number): Promise<string> {
-    const symbol = await getCurrencySymbol();
-    return formatCurrency(cents, symbol);
+  return formatCurrencyCents(cents);
 }

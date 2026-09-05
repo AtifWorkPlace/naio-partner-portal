@@ -19,6 +19,11 @@ node_modules
 .env*.local
 .env.production
 
+# Database
+prisma/dev.db
+prisma/*.db
+prisma/*.db-journal
+
 # Debug
 npm-debug.log*
 yarn-debug.log*
@@ -30,10 +35,6 @@ yarn-error.log*
 # TypeScript
 *.tsbuildinfo
 next-env.d.ts
-
-# Prisma
-/generated/prisma
-/prisma/migrations/*.sql
 
 # IDE
 .vscode/settings.json
@@ -49,9 +50,3 @@ Thumbs.db
 # Logs
 logs
 *.log
-
-# Copilot
-.github/copilot-instructions.md
-
-# Scripts
-/scripts/

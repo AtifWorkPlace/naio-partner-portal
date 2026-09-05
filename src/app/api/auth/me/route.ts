@@ -1,42 +1,52 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { jwtVerify } from 'jose';
+
+const JWT_SECRET = new TextEncoder().encode(
+  process.env.JWT_SECRET || 'naio-partner-secret-jwt-key-2026-development-mode'
+);
 
 export async function GET(request: NextRequest) {
   try {
-    const userId = request.headers.get('x-user-id')!;
+    const token = request.cookies.get('auth-token')?.value;
 
-    // Get user from database to ensure they still exist and get latest data
-
-    // Get user from database to ensure they still exist and get latest data
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-      include: {
-        affiliate: true
-      }
-    });
-
-    if (!user) {
+    if (!token) {
       return NextResponse.json(
-        { error: 'User not found' },
+        { success: false, user: null },
         { status: 401 }
       );
     }
 
-    return NextResponse.json({
-      user: {
-        id: user.id,
-        email: user.email,
-        name: user.name,
-        role: user.role,
-        hasAffiliate: !!user.affiliate,
-        profilePicture: user.profilePicture,
-      }
+    const { payload } = await jwtVerify(token, JWT_SECRET);
+    const userId = payload.userId as string;
+
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      include: {
+        distributor: {
+          include: {
+            district: true,
+          },
+        },
+      },
     });
 
+    if (!user) {
+      return NextResponse.json(
+        { success: false, user: null },
+        { status: 404 }
+      );
+    }
+
+    const { password: _, ...userData } = user;
+
+    return NextResponse.json({
+      success: true,
+      user: userData,
+    });
   } catch (error) {
-    console.error('Auth check error:', error);
     return NextResponse.json(
-      { error: 'Invalid or expired token' },
+      { success: false, user: null },
       { status: 401 }
     );
   }

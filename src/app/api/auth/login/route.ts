@@ -2,37 +2,16 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import * as bcrypt from 'bcryptjs';
 import { SignJWT } from 'jose';
-import { checkRateLimit } from '@/lib/rate-limit';
 
 const JWT_SECRET = new TextEncoder().encode(
-  process.env.JWT_SECRET!
+  process.env.JWT_SECRET || 'naio-partner-secret-jwt-key-2026-development-mode'
 );
 
 export async function POST(request: NextRequest) {
   try {
-    // Rate limit: 5 login attempts per minute per IP
-    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
-      || request.headers.get('x-real-ip')
-      || 'unknown';
-    const rateLimit = await checkRateLimit(ip, 'auth/login', 5, 60 * 1000);
-    if (!rateLimit.allowed) {
-      return NextResponse.json(
-        { success: false, message: 'Too many login attempts. Please try again later.' },
-        {
-          status: 429,
-          headers: {
-            'Retry-After': Math.ceil((rateLimit.resetAt.getTime() - Date.now()) / 1000).toString(),
-            'X-RateLimit-Limit': rateLimit.limit.toString(),
-            'X-RateLimit-Remaining': '0',
-          }
-        }
-      );
-    }
-
     const body = await request.json();
     const { email, password } = body;
 
-    // Validate required fields
     if (!email || !password) {
       return NextResponse.json(
         { success: false, message: 'Email and password are required' },
@@ -40,9 +19,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Find user by email
+    const cleanEmail = email.toLowerCase().trim();
     const user = await prisma.user.findUnique({
-      where: { email: email.toLowerCase().trim() }
+      where: { email: cleanEmail },
+      include: {
+        distributor: true,
+      },
     });
 
     if (!user) {
@@ -52,15 +34,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check user status - use generic message to prevent account status enumeration
     if (user.status !== 'ACTIVE') {
       return NextResponse.json(
-        { success: false, message: 'Unable to log in. Please contact support if you need assistance.' },
+        { success: false, message: 'Your account is pending admin approval or inactive. Please contact NAIO support.' },
         { status: 403 }
       );
     }
 
-    // Verify password
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
       return NextResponse.json(
@@ -74,14 +54,15 @@ export async function POST(request: NextRequest) {
       userId: user.id,
       email: user.email,
       role: user.role,
-      name: user.name
+      name: user.name,
+      distributorId: user.distributor?.id || null,
+      distributorCode: user.distributor?.distributorCode || null,
     })
       .setProtectedHeader({ alg: 'HS256' })
       .setIssuedAt()
       .setExpirationTime('24h')
       .sign(JWT_SECRET);
 
-    // Return user data (password excluded)
     const { password: _, ...userData } = user;
 
     const response = NextResponse.json({
@@ -90,36 +71,29 @@ export async function POST(request: NextRequest) {
       user: userData,
     });
 
-    // Set auth cookie
     response.cookies.set('auth-token', token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
-      maxAge: 86400, // 24 hours
-      path: '/'
+      maxAge: 86400, // 24h
+      path: '/',
     });
 
     return response;
   } catch (error) {
     console.error('Login API error:', error);
     return NextResponse.json(
-      { success: false, message: 'Login failed' },
+      { success: false, message: 'Login processing error' },
       { status: 500 }
     );
   }
 }
 
 export async function DELETE() {
-  try {
-    return NextResponse.json({
-      success: true,
-      message: 'Logged out successfully',
-    });
-  } catch (error) {
-    console.error('Logout API error:', error);
-    return NextResponse.json(
-      { success: false, message: 'Logout failed' },
-      { status: 500 }
-    );
-  }
+  const response = NextResponse.json({
+    success: true,
+    message: 'Logged out successfully',
+  });
+  response.cookies.delete('auth-token');
+  return response;
 }
